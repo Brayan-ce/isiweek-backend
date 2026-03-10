@@ -1,0 +1,810 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model monedas {
+  id       Int        @id @default(autoincrement())
+  nombre   String     @db.VarChar(50)
+  codigo   String     @unique @db.VarChar(10)
+  simbolo  String     @db.VarChar(10)
+  empresas empresas[]
+}
+
+model empresas {
+  id           Int            @id @default(autoincrement())
+  nombre       String         @db.VarChar(150)
+  rnc          String?        @db.VarChar(50)
+  razon_social String?        @db.VarChar(150)
+  telefono     String?        @db.VarChar(20)
+  email        String?        @db.VarChar(150)
+  direccion    String?        @db.Text
+  pais         String?        @default("DO") @db.VarChar(10)
+  estado_geo   String?        @db.VarChar(100)
+  ciudad       String?        @db.VarChar(100)
+  moneda_id    Int
+  estado       estado_empresa @default(activa)
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+
+  moneda               monedas                @relation(fields: [moneda_id], references: [id])
+  usuarios             usuarios[]
+  empresa_modulos      empresa_modulos[]
+  categorias           categorias[]
+  marcas               marcas[]
+  clientes             clientes[]
+  productos            productos[]
+  cajas                cajas[]
+  ventas               ventas[]
+  proveedores          proveedores[]
+  compras              compras[]
+  cotizaciones         cotizaciones[]
+  gastos               gastos[]
+  obras                obras[]
+  trabajadores         trabajadores[]
+  solicitudes          solicitudes[]
+  configuracion        configuracion[]
+  venta_cuotas         venta_cuotas[]
+  fin_planes           fin_planes[]
+  fin_contratos        fin_contratos[]
+  fin_contrato_activos fin_contrato_activos[]
+  fin_cuotas           fin_cuotas[]
+  fin_pagos            fin_pagos[]
+  catalogo_config      catalogo_config?
+  catalogo_productos   catalogo_productos[]
+  catalogo_pedidos     catalogo_pedidos[]
+}
+
+enum estado_empresa {
+  activa
+  inactiva
+}
+
+model tipos_usuario {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(50)
+  usuarios             usuarios[]
+  tipo_usuario_modulos tipo_usuario_modulos[]
+}
+
+model modos_sistema {
+  id            Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(50)
+  descripcion   String?         @db.VarChar(150)
+  usuarios      usuarios[]
+  modulos       modulos[]
+  usuario_modos usuario_modos[]
+}
+
+model usuarios {
+  id              Int            @id @default(autoincrement())
+  empresa_id      Int?
+  tipo_usuario_id Int
+  modo_sistema_id Int?
+  nombre_completo String         @db.VarChar(150)
+  cedula          String?        @db.VarChar(30)
+  email           String         @unique @db.VarChar(150)
+  password_hash   String         @db.VarChar(255)
+  estado          estado_usuario @default(activo)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  empresa        empresas?        @relation(fields: [empresa_id], references: [id])
+  tipo_usuario   tipos_usuario    @relation(fields: [tipo_usuario_id], references: [id])
+  modo_sistema   modos_sistema?   @relation(fields: [modo_sistema_id], references: [id])
+  usuario_modos  usuario_modos[]
+  ventas         ventas[]
+  compras        compras[]
+  cotizaciones   cotizaciones[]
+  gastos         gastos[]
+  gastos_obra    gastos_obra[]
+  cajas_sesiones cajas_sesiones[]
+  fin_contratos  fin_contratos[]
+  fin_pagos      fin_pagos[]
+}
+
+enum estado_usuario {
+  activo
+  inactivo
+}
+
+model usuario_modos {
+  id              Int @id @default(autoincrement())
+  usuario_id      Int
+  modo_sistema_id Int
+
+  usuario      usuarios      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  modo_sistema modos_sistema @relation(fields: [modo_sistema_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, modo_sistema_id])
+}
+
+model otp_tokens {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(150)
+  codigo     String   @db.VarChar(6)
+  expira_at  DateTime
+  usado      Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+model modulos {
+  id              Int     @id @default(autoincrement())
+  nombre          String  @db.VarChar(100)
+  slug            String  @unique @db.VarChar(100)
+  descripcion     String? @db.VarChar(200)
+  modo_sistema_id Int?
+
+  modo_sistema         modos_sistema?         @relation(fields: [modo_sistema_id], references: [id])
+  empresa_modulos      empresa_modulos[]
+  tipo_usuario_modulos tipo_usuario_modulos[]
+}
+
+model empresa_modulos {
+  id         Int     @id @default(autoincrement())
+  empresa_id Int
+  modulo_id  Int
+  activo     Boolean @default(true)
+
+  empresa empresas @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  modulo  modulos  @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+
+  @@unique([empresa_id, modulo_id])
+}
+
+model tipo_usuario_modulos {
+  id              Int     @id @default(autoincrement())
+  tipo_usuario_id Int
+  modulo_id       Int
+  puede_ver       Boolean @default(true)
+
+  tipo_usuario tipos_usuario @relation(fields: [tipo_usuario_id], references: [id], onDelete: Cascade)
+  modulo       modulos       @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+
+  @@unique([tipo_usuario_id, modulo_id])
+}
+
+model comprobantes {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(10)
+  descripcion String   @db.VarChar(150)
+  ventas      ventas[]
+}
+
+model metodos_pago {
+  id          Int           @id @default(autoincrement())
+  nombre      String        @unique @db.VarChar(50)
+  ventas      ventas[]
+  venta_pagos venta_pagos[]
+  fin_pagos   fin_pagos[]
+}
+
+model categorias {
+  id         Int    @id @default(autoincrement())
+  empresa_id Int
+  nombre     String @db.VarChar(100)
+
+  empresa   empresas    @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  productos productos[]
+}
+
+model marcas {
+  id         Int    @id @default(autoincrement())
+  empresa_id Int
+  nombre     String @db.VarChar(100)
+
+  empresa   empresas    @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  productos productos[]
+}
+
+model clientes {
+  id         Int      @id @default(autoincrement())
+  empresa_id Int
+  nombre     String   @db.VarChar(150)
+  cedula_rnc String?  @db.VarChar(30)
+  telefono   String?  @db.VarChar(20)
+  email      String?  @db.VarChar(150)
+  direccion  String?  @db.Text
+  created_at DateTime @default(now())
+
+  empresa       empresas        @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  ventas        ventas[]
+  cotizaciones  cotizaciones[]
+  fin_contratos fin_contratos[]
+}
+
+model productos {
+  id               Int      @id @default(autoincrement())
+  empresa_id       Int
+  categoria_id     Int?
+  marca_id         Int?
+  nombre           String   @db.VarChar(150)
+  descripcion      String?  @db.Text
+  codigo           String?  @db.VarChar(100)
+  imagen           String?  @db.VarChar(255)
+  barcode          String?  @db.VarChar(255)
+  precio           Decimal  @default(0) @db.Decimal(15, 2)
+  precio_costo     Decimal  @default(0) @db.Decimal(15, 2)
+  stock            Int      @default(0)
+  itbis_pct        Decimal  @default(18.00) @db.Decimal(5, 2)
+  itbis_habilitado Boolean  @default(true)
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+
+  empresa               empresas                @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  categoria             categorias?             @relation(fields: [categoria_id], references: [id])
+  marca                 marcas?                 @relation(fields: [marca_id], references: [id])
+  venta_detalles        venta_detalles[]
+  compra_detalles       compra_detalles[]
+  cotizacion_items      cotizacion_items[]
+  catalogo_productos    catalogo_productos[]
+  catalogo_pedido_items catalogo_pedido_items[]
+}
+
+model cajas {
+  id             Int      @id @default(autoincrement())
+  empresa_id     Int
+  nombre         String   @db.VarChar(100)
+  numero_usuario Int?
+  saldo_actual   Decimal  @default(0) @db.Decimal(15, 2)
+  activa         Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  empresa        empresas         @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  cajas_sesiones cajas_sesiones[]
+}
+
+model cajas_sesiones {
+  id                Int         @id @default(autoincrement())
+  caja_id           Int
+  usuario_id        Int
+  saldo_apertura    Decimal     @default(0) @db.Decimal(15, 2)
+  saldo_cierre      Decimal?    @db.Decimal(15, 2)
+  saldo_calculado   Decimal?    @db.Decimal(15, 2)
+  diferencia_cierre Decimal?    @db.Decimal(15, 2)
+  notas_cierre      String?     @db.Text
+  abierta_at        DateTime    @default(now())
+  cerrada_at        DateTime?
+  estado            estado_caja @default(abierta)
+
+  caja    cajas    @relation(fields: [caja_id], references: [id], onDelete: Cascade)
+  usuario usuarios @relation(fields: [usuario_id], references: [id])
+  ventas  ventas[]
+}
+
+enum estado_caja {
+  abierta
+  cerrada
+}
+
+model ventas {
+  id                Int          @id @default(autoincrement())
+  empresa_id        Int
+  usuario_id        Int
+  cliente_id        Int?
+  caja_sesion_id    Int?
+  comprobante_id    Int?
+  metodo_pago_id    Int?
+  subtotal          Decimal      @default(0) @db.Decimal(15, 2)
+  itbis             Decimal      @default(0) @db.Decimal(15, 2)
+  descuento         Decimal      @default(0) @db.Decimal(15, 2)
+  total             Decimal      @default(0) @db.Decimal(15, 2)
+  efectivo_recibido Decimal      @default(0) @db.Decimal(15, 2)
+  es_pago_mixto     Boolean      @default(false)
+  estado            estado_venta @default(completada)
+  created_at        DateTime     @default(now())
+
+  empresa        empresas         @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  usuario        usuarios         @relation(fields: [usuario_id], references: [id])
+  cliente        clientes?        @relation(fields: [cliente_id], references: [id])
+  caja_sesion    cajas_sesiones?  @relation(fields: [caja_sesion_id], references: [id])
+  comprobante    comprobantes?    @relation(fields: [comprobante_id], references: [id])
+  metodo_pago    metodos_pago?    @relation(fields: [metodo_pago_id], references: [id])
+  venta_detalles venta_detalles[]
+  venta_pagos    venta_pagos[]
+  venta_cuotas   venta_cuotas[]
+}
+
+enum estado_venta {
+  completada
+  cancelada
+  pendiente
+}
+
+model venta_pagos {
+  id             Int      @id @default(autoincrement())
+  venta_id       Int
+  metodo_pago_id Int
+  monto          Decimal  @db.Decimal(15, 2)
+  created_at     DateTime @default(now())
+
+  venta       ventas       @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  metodo_pago metodos_pago @relation(fields: [metodo_pago_id], references: [id])
+}
+
+model venta_detalles {
+  id              Int     @id @default(autoincrement())
+  venta_id        Int
+  producto_id     Int?
+  nombre_producto String? @db.VarChar(150)
+  cantidad        Int     @default(1)
+  precio_unitario Decimal @db.Decimal(15, 2)
+  itbis           Decimal @default(0) @db.Decimal(15, 2)
+  descuento       Decimal @default(0) @db.Decimal(15, 2)
+  subtotal        Decimal @db.Decimal(15, 2)
+
+  venta    ventas     @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  producto productos? @relation(fields: [producto_id], references: [id])
+}
+
+model venta_cuotas {
+  id         Int          @id @default(autoincrement())
+  venta_id   Int
+  empresa_id Int
+  numero     Int
+  monto      Decimal      @db.Decimal(15, 2)
+  estado     estado_cuota @default(pendiente)
+  created_at DateTime     @default(now())
+  pagada_at  DateTime?
+
+  venta   ventas   @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  empresa empresas @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+}
+
+enum estado_cuota {
+  pendiente
+  pagada
+}
+
+model proveedores {
+  id         Int     @id @default(autoincrement())
+  empresa_id Int
+  nombre     String  @db.VarChar(150)
+  rnc        String? @db.VarChar(30)
+  telefono   String? @db.VarChar(20)
+  email      String? @db.VarChar(150)
+  direccion  String? @db.Text
+
+  empresa empresas  @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  compras compras[]
+}
+
+model compras {
+  id           Int           @id @default(autoincrement())
+  empresa_id   Int
+  proveedor_id Int?
+  usuario_id   Int
+  total        Decimal       @default(0) @db.Decimal(15, 2)
+  estado       estado_compra @default(completada)
+  created_at   DateTime      @default(now())
+
+  empresa         empresas          @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  proveedor       proveedores?      @relation(fields: [proveedor_id], references: [id])
+  usuario         usuarios          @relation(fields: [usuario_id], references: [id])
+  compra_detalles compra_detalles[]
+}
+
+enum estado_compra {
+  completada
+  pendiente
+  cancelada
+}
+
+model compra_detalles {
+  id              Int     @id @default(autoincrement())
+  compra_id       Int
+  producto_id     Int?
+  nombre_producto String? @db.VarChar(150)
+  cantidad        Int     @default(1)
+  precio_unitario Decimal @db.Decimal(15, 2)
+  subtotal        Decimal @db.Decimal(15, 2)
+
+  compra   compras    @relation(fields: [compra_id], references: [id], onDelete: Cascade)
+  producto productos? @relation(fields: [producto_id], references: [id])
+}
+
+model cotizaciones {
+  id         Int               @id @default(autoincrement())
+  empresa_id Int
+  cliente_id Int?
+  usuario_id Int
+  subtotal   Decimal           @default(0) @db.Decimal(15, 2)
+  itbis      Decimal           @default(0) @db.Decimal(15, 2)
+  descuento  Decimal           @default(0) @db.Decimal(15, 2)
+  total      Decimal           @default(0) @db.Decimal(15, 2)
+  notas      String?           @db.Text
+  estado     estado_cotizacion @default(pendiente)
+  created_at DateTime          @default(now())
+
+  empresa          empresas           @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  cliente          clientes?          @relation(fields: [cliente_id], references: [id])
+  usuario          usuarios           @relation(fields: [usuario_id], references: [id])
+  cotizacion_items cotizacion_items[]
+}
+
+model cotizacion_items {
+  id              Int     @id @default(autoincrement())
+  cotizacion_id   Int
+  producto_id     Int?
+  nombre_producto String? @db.VarChar(150)
+  cantidad        Int     @default(1)
+  precio_unitario Decimal @db.Decimal(15, 2)
+  itbis           Decimal @default(0) @db.Decimal(15, 2)
+  descuento       Decimal @default(0) @db.Decimal(15, 2)
+  subtotal        Decimal @db.Decimal(15, 2)
+
+  cotizacion cotizaciones @relation(fields: [cotizacion_id], references: [id], onDelete: Cascade)
+  producto   productos?   @relation(fields: [producto_id], references: [id])
+}
+
+enum estado_cotizacion {
+  pendiente
+  aprobada
+  rechazada
+  vencida
+}
+
+model gastos {
+  id         Int      @id @default(autoincrement())
+  empresa_id Int
+  usuario_id Int
+  concepto   String   @db.VarChar(200)
+  monto      Decimal  @db.Decimal(15, 2)
+  tipo       String?  @db.VarChar(100)
+  created_at DateTime @default(now())
+
+  empresa empresas @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  usuario usuarios @relation(fields: [usuario_id], references: [id])
+}
+
+model obras {
+  id                 Int         @id @default(autoincrement())
+  empresa_id         Int
+  nombre             String      @db.VarChar(150)
+  codigo             String?     @db.VarChar(50)
+  estado             estado_obra @default(en_progreso)
+  fecha_inicio       DateTime?   @db.Date
+  fecha_fin_estimada DateTime?   @db.Date
+  presupuesto        Decimal     @default(0) @db.Decimal(15, 2)
+  created_at         DateTime    @default(now())
+
+  empresa     empresas      @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  asistencias asistencias[]
+  gastos_obra gastos_obra[]
+}
+
+enum estado_obra {
+  en_progreso
+  completada
+  pausada
+  cancelada
+}
+
+model trabajadores {
+  id              Int      @id @default(autoincrement())
+  empresa_id      Int
+  nombre_completo String   @db.VarChar(150)
+  cedula          String?  @db.VarChar(30)
+  telefono        String?  @db.VarChar(20)
+  cargo           String?  @db.VarChar(100)
+  salario_diario  Decimal  @default(0) @db.Decimal(15, 2)
+  activo          Boolean  @default(true)
+  created_at      DateTime @default(now())
+
+  empresa     empresas      @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  asistencias asistencias[]
+}
+
+model asistencias {
+  id               Int               @id @default(autoincrement())
+  obra_id          Int
+  trabajador_id    Int
+  fecha            DateTime          @db.Date
+  horas_trabajadas Decimal           @default(8) @db.Decimal(5, 2)
+  estado           estado_asistencia @default(presente)
+
+  obra       obras        @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  trabajador trabajadores @relation(fields: [trabajador_id], references: [id], onDelete: Cascade)
+}
+
+enum estado_asistencia {
+  presente
+  ausente
+  medio_dia
+}
+
+model gastos_obra {
+  id         Int      @id @default(autoincrement())
+  obra_id    Int
+  usuario_id Int
+  concepto   String   @db.VarChar(200)
+  tipo       String?  @db.VarChar(100)
+  monto      Decimal  @db.Decimal(15, 2)
+  fecha      DateTime @db.Date
+  created_at DateTime @default(now())
+
+  obra    obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  usuario usuarios @relation(fields: [usuario_id], references: [id])
+}
+
+model solicitudes {
+  id         Int              @id @default(autoincrement())
+  empresa_id Int?
+  nombre     String?          @db.VarChar(150)
+  email      String?          @db.VarChar(150)
+  telefono   String?          @db.VarChar(20)
+  mensaje    String?          @db.Text
+  estado     estado_solicitud @default(pendiente)
+  created_at DateTime         @default(now())
+
+  empresa empresas? @relation(fields: [empresa_id], references: [id])
+}
+
+enum estado_solicitud {
+  pendiente
+  aprobada
+  rechazada
+}
+
+model configuracion {
+  id         Int     @id @default(autoincrement())
+  empresa_id Int
+  clave      String  @db.VarChar(100)
+  valor      String? @db.Text
+
+  empresa empresas @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  @@unique([empresa_id, clave])
+}
+
+model sistema_config {
+  id         Int      @id @default(autoincrement())
+  clave      String   @unique @db.VarChar(100)
+  valor      String?  @db.Text
+  updated_at DateTime @updatedAt
+}
+
+model fin_planes {
+  id                         Int      @id @default(autoincrement())
+  empresa_id                 Int
+  nombre                     String   @db.VarChar(150)
+  codigo                     String?  @db.VarChar(50)
+  descripcion                String?  @db.Text
+  mora_pct                   Decimal  @default(5.00) @db.Decimal(5, 2)
+  dias_gracia                Int      @default(5)
+  descuento_anticipado_pct   Decimal  @default(0) @db.Decimal(5, 2)
+  cuotas_minimas_anticipadas Int      @default(0)
+  monto_minimo               Decimal  @default(0) @db.Decimal(15, 2)
+  monto_maximo               Decimal? @db.Decimal(15, 2)
+  requiere_fiador            Boolean  @default(false)
+  permite_anticipado         Boolean  @default(true)
+  activo                     Boolean  @default(true)
+  created_at                 DateTime @default(now())
+
+  empresa   empresas            @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  opciones  fin_plan_opciones[]
+  contratos fin_contratos[]
+}
+
+model fin_plan_opciones {
+  id             Int             @id @default(autoincrement())
+  plan_id        Int
+  meses          Int
+  tasa_anual_pct Decimal         @default(0) @db.Decimal(7, 4)
+  inicial_pct    Decimal         @default(0) @db.Decimal(5, 2)
+  tipo           fin_opcion_tipo @default(credito)
+  created_at     DateTime        @default(now())
+
+  plan      fin_planes      @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  contratos fin_contratos[]
+}
+
+enum fin_opcion_tipo {
+  cash
+  credito
+}
+
+model fin_contratos {
+  id               Int                 @id @default(autoincrement())
+  empresa_id       Int
+  usuario_id       Int
+  cliente_id       Int
+  plan_id          Int
+  opcion_id        Int
+  numero           String              @unique @db.VarChar(30)
+  monto_total      Decimal             @db.Decimal(15, 2)
+  monto_inicial    Decimal             @default(0) @db.Decimal(15, 2)
+  monto_financiado Decimal             @db.Decimal(15, 2)
+  total_intereses  Decimal             @default(0) @db.Decimal(15, 2)
+  total_pagar      Decimal             @db.Decimal(15, 2)
+  saldo_pendiente  Decimal             @db.Decimal(15, 2)
+  meses            Int
+  tasa_anual_pct   Decimal             @default(0) @db.Decimal(7, 4)
+  cuota_mensual    Decimal             @db.Decimal(15, 2)
+  fecha_inicio     DateTime            @db.Date
+  fecha_fin        DateTime            @db.Date
+  notas            String?             @db.Text
+  estado           fin_contrato_estado @default(activo)
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+
+  empresa  empresas               @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  usuario  usuarios               @relation(fields: [usuario_id], references: [id])
+  cliente  clientes               @relation(fields: [cliente_id], references: [id])
+  plan     fin_planes             @relation(fields: [plan_id], references: [id])
+  opcion   fin_plan_opciones      @relation(fields: [opcion_id], references: [id])
+  activos  fin_contrato_activos[]
+  fiadores fin_fiadores[]
+  cuotas   fin_cuotas[]
+  pagos    fin_pagos[]
+}
+
+enum fin_contrato_estado {
+  activo
+  pagado
+  incumplido
+  reestructurado
+  cancelado
+}
+
+model fin_contrato_activos {
+  id          Int      @id @default(autoincrement())
+  contrato_id Int
+  empresa_id  Int
+  nombre      String   @db.VarChar(150)
+  descripcion String?  @db.Text
+  serial      String?  @db.VarChar(100)
+  valor       Decimal  @default(0) @db.Decimal(15, 2)
+  imagen      String?  @db.VarChar(255)
+  created_at  DateTime @default(now())
+
+  contrato fin_contratos @relation(fields: [contrato_id], references: [id], onDelete: Cascade)
+  empresa  empresas      @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+}
+
+model fin_fiadores {
+  id          Int      @id @default(autoincrement())
+  contrato_id Int
+  nombre      String   @db.VarChar(150)
+  cedula      String?  @db.VarChar(30)
+  telefono    String?  @db.VarChar(20)
+  email       String?  @db.VarChar(150)
+  direccion   String?  @db.Text
+  created_at  DateTime @default(now())
+
+  contrato fin_contratos @relation(fields: [contrato_id], references: [id], onDelete: Cascade)
+}
+
+model fin_cuotas {
+  id                Int              @id @default(autoincrement())
+  contrato_id       Int
+  empresa_id        Int
+  numero            Int
+  monto             Decimal          @db.Decimal(15, 2)
+  capital           Decimal          @default(0) @db.Decimal(15, 2)
+  interes           Decimal          @default(0) @db.Decimal(15, 2)
+  mora              Decimal          @default(0) @db.Decimal(15, 2)
+  fecha_vencimiento DateTime         @db.Date
+  fecha_pago        DateTime?        @db.Date
+  estado            fin_cuota_estado @default(pendiente)
+  created_at        DateTime         @default(now())
+
+  contrato    fin_contratos     @relation(fields: [contrato_id], references: [id], onDelete: Cascade)
+  empresa     empresas          @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  pago_cuotas fin_pago_cuotas[]
+}
+
+enum fin_cuota_estado {
+  pendiente
+  pagada
+  vencida
+  parcial
+}
+
+model fin_pagos {
+  id             Int      @id @default(autoincrement())
+  contrato_id    Int
+  empresa_id     Int
+  usuario_id     Int
+  monto          Decimal  @db.Decimal(15, 2)
+  monto_capital  Decimal  @default(0) @db.Decimal(15, 2)
+  monto_interes  Decimal  @default(0) @db.Decimal(15, 2)
+  monto_mora     Decimal  @default(0) @db.Decimal(15, 2)
+  metodo_pago_id Int?
+  referencia     String?  @db.VarChar(100)
+  notas          String?  @db.Text
+  fecha          DateTime @db.Date
+  created_at     DateTime @default(now())
+
+  contrato    fin_contratos     @relation(fields: [contrato_id], references: [id], onDelete: Cascade)
+  empresa     empresas          @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  usuario     usuarios          @relation(fields: [usuario_id], references: [id])
+  metodo_pago metodos_pago?     @relation(fields: [metodo_pago_id], references: [id])
+  pago_cuotas fin_pago_cuotas[]
+}
+
+model fin_pago_cuotas {
+  id       Int     @id @default(autoincrement())
+  pago_id  Int
+  cuota_id Int
+  monto    Decimal @db.Decimal(15, 2)
+
+  pago  fin_pagos  @relation(fields: [pago_id], references: [id], onDelete: Cascade)
+  cuota fin_cuotas @relation(fields: [cuota_id], references: [id], onDelete: Cascade)
+}
+
+model catalogo_config {
+  id               Int      @id @default(autoincrement())
+  empresa_id       Int      @unique
+  nombre           String   @db.VarChar(150)
+  descripcion      String?  @db.Text
+  url_slug         String   @unique @db.VarChar(100)
+  logo             String?  @db.VarChar(255)
+  color_primario   String   @default("#1d6fce") @db.VarChar(10)
+  color_secundario String   @default("#0ea5e9") @db.VarChar(10)
+  whatsapp         String?  @db.VarChar(20)
+  horario          String?  @db.Text
+  direccion        String?  @db.Text
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  empresa empresas @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+}
+
+model catalogo_productos {
+  id          Int      @id @default(autoincrement())
+  empresa_id  Int
+  producto_id Int
+  visible     Boolean  @default(true)
+  destacado   Boolean  @default(false)
+  orden       Int      @default(0)
+  created_at  DateTime @default(now())
+
+  empresa  empresas  @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  producto productos @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+
+  @@unique([empresa_id, producto_id])
+}
+
+model catalogo_pedidos {
+  id             Int                    @id @default(autoincrement())
+  empresa_id     Int
+  nombre_cliente String                 @db.VarChar(150)
+  telefono       String?                @db.VarChar(20)
+  email          String?                @db.VarChar(150)
+  direccion      String?                @db.Text
+  notas          String?                @db.Text
+  total          Decimal                @default(0) @db.Decimal(15, 2)
+  estado         catalogo_pedido_estado @default(pendiente)
+  created_at     DateTime               @default(now())
+  updated_at     DateTime               @updatedAt
+
+  empresa empresas                @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  items   catalogo_pedido_items[]
+}
+
+enum catalogo_pedido_estado {
+  pendiente
+  confirmado
+  enviado
+  entregado
+  cancelado
+}
+
+model catalogo_pedido_items {
+  id              Int     @id @default(autoincrement())
+  pedido_id       Int
+  producto_id     Int?
+  nombre_producto String  @db.VarChar(150)
+  cantidad        Int     @default(1)
+  precio          Decimal @db.Decimal(15, 2)
+  subtotal        Decimal @db.Decimal(15, 2)
+
+  pedido   catalogo_pedidos @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  producto productos?       @relation(fields: [producto_id], references: [id], onDelete: SetNull)
+}

@@ -1,0 +1,102 @@
+# Contexto del proyecto — IsiWeek POS
+
+Estoy construyendo un sistema POS llamado **IsiWeek**. Necesito que me generes una nueva sección siguiendo exactamente las convenciones del proyecto.
+
+## Stack
+- **Frontend:** Next.js 16 (App Router) — `"use client"` en componentes, `"use server"` en servidor.js
+- **Backend:** Node.js con Fastify — separado del frontend en `http://localhost:3001`
+- **ORM:** Prisma con MySQL
+- **Estilos:** CSS Modules con soporte dark mode via `[data-theme="dark"]`
+- **Iconos:** ion-icons (`<ion-icon name="..." />`)
+
+## Estructura de carpetas que DEBES seguir
+
+```
+_Pages/pos/[Seccion]/
+├── [Seccion].jsx
+├── [Seccion].module.css
+└── servidor.js
+
+_Pages/pos/[Seccion]/nuevo/
+├── Nuevo.jsx
+├── Nuevo.module.css
+└── servidor.js
+
+_Pages/pos/[Seccion]/editar/
+├── Editar.jsx
+├── Editar.module.css
+└── servidor.js
+
+_Pages/pos/[Seccion]/ver/         ← solo si aplica
+├── Ver.jsx
+├── Ver.module.css
+└── servidor.js
+```
+
+Y las páginas de Next.js:
+```
+app/pos/[seccion]/page.js
+app/pos/[seccion]/nuevo/page.js
+app/pos/[seccion]/editar/[id]/page.js
+app/pos/[seccion]/ver/[id]/page.js   ← solo si aplica
+```
+
+## Reglas de código que DEBES respetar
+
+**General**
+- `EMPRESA_ID = 1` y `USUARIO_ID = 2` hardcodeados en los componentes (auth pendiente)
+- `const API = process.env.BACKEND_URL ?? "http://localhost:3001"` en todos los servidor.js
+- Cada servidor.js exporta SOLO las funciones que esa página necesita
+- Sin comentarios en el código
+- Sin emojis
+
+**Paleta, estilos y patrones**
+Te paso los archivos de una sección ya hecha como referencia visual y de código. Extrae de ahí la paleta de colores, el patrón de CSS Modules, los modales, toasts, skeletons, badges y botones. No inventes nada, replica exactamente lo que ves en esos archivos.
+
+**Formularios**
+- Si el formulario es simple (pocos campos) → modal flotante dentro de la misma página, sin rutas extra. Solo se generan 3 archivos: `[Seccion].jsx`, `[Seccion].module.css` y `servidor.js`
+- Si el formulario es grande → rutas separadas con sus propias carpetas: `/nuevo/` y `/editar/[id]/`, cada una con su propio `jsx`, `module.css` y `servidor.js`
+
+**CSS**
+- `.page` siempre con `padding: 20px`, `display: flex`, `flex-direction: column`, `gap: 16px`
+- `.card` siempre con `background: white`, `border-radius: 14px`, `border: 1.5px solid #f1f5f9`, `padding: 18px`
+- Botón principal siempre con `background: linear-gradient(135deg, #1d6fce 0%, #0ea5e9 100%)`
+- Botón editar usa gradiente naranja: `linear-gradient(135deg, #f59e0b 0%, #f97316 100%)`
+- Dark mode en cada clase con `:global([data-theme="dark"]) .clase { ... }`
+- `@media (max-width: 768px)` al final de cada CSS
+
+**Backend Fastify**
+- Archivo de ruta en: `src/rutas/pos/[seccion]/ruta[Seccion].js`
+- Archivo de servicio en: `src/servicios/pos/[seccion]/servicio[Seccion].js`
+- Prefijo registrado en server.js: `await app.register(ruta[Seccion], { prefix: "/api/pos/[seccion]" })`
+- Importar también en server.js
+
+**Prisma**
+- Si la sección necesita tabla nueva → pasarte el modelo completo para agregar
+- Siempre agregar relación inversa en modelos relacionados
+
+## Archivos que debes pedirme si los necesitas
+
+Para entender el proyecto completo puedo pasarte:
+
+1. `schema.prisma` — modelos de la base de datos
+2. `server.js` — registro de rutas Fastify
+3. El archivo de una sección ya hecha como referencia (ej: Cotizaciones o Vender)
+4. `Sidebar.jsx` — para ver los slugs registrados y grupos de navegación
+5. `PosLayout.jsx` — layout general del POS
+
+## Lo que necesito que generes
+
+Sección: **[NOMBRE DE LA SECCIÓN]**
+
+Funcionalidad: [describe qué hace — ej: "gestión de clientes con CRUD completo, permite ver historial de compras por cliente"]
+
+Tabla(s) involucrada(s): [ej: clientes, ventas]
+
+Campos principales: [lista los campos del formulario]
+
+¿Tiene vista detalle (ver/[id])?: [sí / no]
+
+¿Necesita tabla nueva en BD?: [sí / no — si sí, describe los campos]
+
+Archivos adicionales que te paso: [lista aquí los archivos que adjuntarás]
