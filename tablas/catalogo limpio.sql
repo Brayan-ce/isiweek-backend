@@ -1,0 +1,1 @@
+DELETE FROM modulos WHERE slug = 'ventas-online-configuracion';

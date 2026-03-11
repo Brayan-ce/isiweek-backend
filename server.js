@@ -31,8 +31,15 @@ import rutaGastos from "./src/rutas/pos/gastos/rutaGastos.js"
 import rutaCotizaciones from "./src/rutas/pos/cotizaciones/rutaCotizaciones.js"
 import rutaReportes from "./src/rutas/pos/reportes/rutaReportes.js"
 
-
-
+//Catalogo
+import rutaCatalogo from "./src/rutas/pos/ventasOnline/catalogo/rutaCatalogo.js"
+import rutaPedidosOnline from "./src/rutas/pos/ventasOnline/pedidos/rutaPedidos.js"
+import rutaCatalogoPublico from "./src/rutas/catalogo/rutaCatalogoPublico.js"
+//Financiamiento
+import rutaDashboardCreditos from "./src/rutas/pos/creditos/dashboard/rutaDashboardCreditos.js"
+import rutaPlanes from "./src/rutas/pos/creditos/planes/rutaPlanes.js"
+import rutaConfiguracionPos from "./src/rutas/pos/configuracion/rutaConfiguracion.js"
+import rutaUsuariosPos from "./src/rutas/pos/usuarios/rutaUsuariosPos.js"
 
 const app = Fastify({
   logger: {
@@ -87,6 +94,18 @@ await app.register(rutaInventario, { prefix: "/api/pos/inventario" })
 await app.register(rutaGastos, { prefix: "/api/pos/gastos" })
 await app.register(rutaCotizaciones, { prefix: "/api/pos/cotizaciones" })
 await app.register(rutaReportes, { prefix: "/api/pos/reportes" })
+//configuracion sistema
+await app.register(rutaConfiguracionPos, { prefix: "/api/pos/configuracion" })
+await app.register(rutaUsuariosPos,     { prefix: "/api/pos/usuarios" })
+//Catalogo
+await app.register(rutaCatalogo, { prefix: "/api/pos/ventas-online/catalogo" })
+await app.register(rutaPedidosOnline, { prefix: "/api/pos/ventas-online/pedidos" })
+await app.register(rutaCatalogoPublico, { prefix: "/api/catalogo" })
+//Financiaimiento
+await app.register(rutaDashboardCreditos, { prefix: "/api/pos/creditos/dashboard" })
+await app.register(rutaPlanes, { prefix: "/api/pos/creditos/planes" })
+
+
 
 
 

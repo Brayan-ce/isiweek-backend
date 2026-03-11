@@ -123,7 +123,6 @@ INSERT INTO modulos (nombre, slug, modo_sistema_id) VALUES
 ('Mora y Alertas', 'creditos-mora', 3),
 ('Pedidos', 'ventas-online-pedidos', 4),
 ('Catálogo', 'ventas-online-catalogo', 4),
-('Configuración Tienda', 'ventas-online-configuracion', 4);
 
 CREATE TABLE empresa_modulos (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

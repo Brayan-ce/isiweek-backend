@@ -1,5 +1,17 @@
 import db from "../../../_Db/db.js"
 
+const SLUG_MAP = {
+  "creditos-dashboard":          "creditos/dashboard",
+  "creditos-planes":             "creditos/planes",
+  "creditos-contratos":          "creditos/contratos",
+  "creditos-cuotas":             "creditos/cuotas",
+  "creditos-pagos":              "creditos/pagos",
+  "creditos-mora":               "creditos/mora",
+  "ventas-online-pedidos":       "ventas-online/pedidos",
+  "ventas-online-catalogo":      "ventas-online/catalogo",
+  "ventas-online-configuracion": "ventas-online/configuracion",
+}
+
 export async function obtenerDatosHeader(usuarioId) {
   const usuario = await db.usuarios.findUnique({
     where: { id: usuarioId },
@@ -66,10 +78,12 @@ export async function obtenerDatosHeader(usuarioId) {
     },
   })
 
-  const modulos = modulosBD.filter(m => {
-    if (!m.modo_sistema) return true
-    return modosDelUsuario.has(m.modo_sistema.nombre)
-  })
+  const modulos = modulosBD
+    .filter(m => {
+      if (!m.modo_sistema) return true
+      return modosDelUsuario.has(m.modo_sistema.nombre)
+    })
+    .map(m => ({ ...m, slug: SLUG_MAP[m.slug] ?? m.slug }))
 
   const config = await db.sistema_config.findMany({
     where: { clave: { in: ["sistema_nombre", "sistema_logo"] } },

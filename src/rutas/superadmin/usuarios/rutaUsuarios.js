@@ -11,8 +11,8 @@ import { listarEmpresas } from "../../../servicios/superadmin/empresas/servicioE
 
 export default async function rutaUsuarios(app) {
   app.get("/", async (req, reply) => {
-    const { busqueda = "", estado = "", tipo = "", pagina = 1, limite = 12 } = req.query
-    const data = await listarUsuarios({ busqueda, estado, tipo, pagina: Number(pagina), limite: Number(limite) })
+    const { busqueda = "", estado = "", tipo = "", pagina = 1, limite = 12, empresaId = "" } = req.query
+    const data = await listarUsuarios({ busqueda, estado, tipo, pagina: Number(pagina), limite: Number(limite), empresaId })
     return reply.send(data)
   })
 
