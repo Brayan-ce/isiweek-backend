@@ -5,7 +5,7 @@ const SELECT_USER = {
   id: true, nombre_completo: true, cedula: true,
   email: true, estado: true, created_at: true,
   tipo_usuario: { select: { id: true, nombre: true } },
-  modo_sistema: { select: { id: true, nombre: true } },
+  usuario_modos: { select: { modo_sistema: { select: { id: true, nombre: true } } } },
 }
 
 export async function getUsuarios(empresaId) {
@@ -19,22 +19,26 @@ export async function getUsuarios(empresaId) {
 export async function crearUsuario(empresaId, data) {
   if (!data.nombre_completo?.trim()) throw new Error("El nombre es obligatorio")
   if (!data.email?.trim())           throw new Error("El email es obligatorio")
-  if (!data.password?.trim())        throw new Error("La contraseña es obligatoria")
+  if (!data.password?.trim())        throw new Error("La contrasena es obligatoria")
 
   const existe = await db.usuarios.findUnique({ where: { email: data.email.trim() } })
   if (existe) throw new Error("Ya existe un usuario con ese email")
 
-  const hash = await bcrypt.hash(data.password, 10)
+  const hash     = await bcrypt.hash(data.password, 10)
+  const modosIds = Array.isArray(data.modos_ids) ? data.modos_ids.map(Number) : []
+
   return db.usuarios.create({
     data: {
       empresa_id:      empresaId,
       tipo_usuario_id: Number(data.tipo_usuario_id ?? 3),
-      modo_sistema_id: data.modo_sistema_id ? Number(data.modo_sistema_id) : null,
       nombre_completo: data.nombre_completo.trim(),
       cedula:          data.cedula?.trim() || null,
       email:           data.email.trim().toLowerCase(),
       password_hash:   hash,
       estado:          "activo",
+      usuario_modos: {
+        create: modosIds.map(mid => ({ modo_sistema_id: mid })),
+      },
     },
     select: SELECT_USER,
   })
@@ -49,14 +53,19 @@ export async function editarUsuario(id, data) {
   })
   if (existe) throw new Error("Ya existe un usuario con ese email")
 
+  const modosIds = Array.isArray(data.modos_ids) ? data.modos_ids.map(Number) : []
+
   return db.usuarios.update({
     where: { id: Number(id) },
     data: {
       tipo_usuario_id: Number(data.tipo_usuario_id ?? 3),
-      modo_sistema_id: data.modo_sistema_id ? Number(data.modo_sistema_id) : null,
       nombre_completo: data.nombre_completo.trim(),
       cedula:          data.cedula?.trim() || null,
       email:           data.email.trim().toLowerCase(),
+      usuario_modos: {
+        deleteMany: {},
+        create: modosIds.map(mid => ({ modo_sistema_id: mid })),
+      },
     },
     select: SELECT_USER,
   })
@@ -71,7 +80,7 @@ export async function toggleUsuario(id, estado) {
 }
 
 export async function resetPassword(id, password) {
-  if (!password || password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres")
+  if (!password || password.length < 6) throw new Error("La contrasena debe tener al menos 6 caracteres")
   const hash = await bcrypt.hash(password, 10)
   await db.usuarios.update({ where: { id: Number(id) }, data: { password_hash: hash } })
   return { ok: true }

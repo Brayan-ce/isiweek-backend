@@ -94,6 +94,7 @@ export async function obtenerDatosHeader(usuarioId) {
     usuario: {
       id: usuario.id,
       nombre_completo: usuario.nombre_completo,
+      tipo_usuario_id: usuario.tipo_usuario_id
     },
     empresa: {
       id: usuario.empresa?.id ?? null,

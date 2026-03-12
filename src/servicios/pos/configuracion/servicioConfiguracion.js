@@ -1,9 +1,8 @@
 import db from "../../../_Db/db.js"
 import fs from "fs/promises"
 import path from "path"
-import { fileURLToPath } from "url"
 
-const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../../../public")
+const PUBLIC_DIR = path.join(process.cwd(), "public")
 
 export async function getEmpresa(empresaId) {
   return db.empresas.findUnique({
@@ -50,12 +49,16 @@ export async function guardarEmpresa(empresaId, data) {
 
 export async function subirLogoEmpresa(empresaId, req) {
   const data = await req.file()
-  if (!data) throw new Error("No se recibió ningún archivo")
+  if (!data) throw new Error("No se recibio ningun archivo")
 
   const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"]
   if (!allowed.includes(data.mimetype)) throw new Error("Formato no permitido")
 
-  const ext      = data.mimetype === "image/png" ? "png" : data.mimetype === "image/webp" ? "webp" : data.mimetype === "image/svg+xml" ? "svg" : "jpg"
+  let ext = "jpg"
+  if (data.mimetype === "image/png")      ext = "png"
+  else if (data.mimetype === "image/webp") ext = "webp"
+  else if (data.mimetype === "image/svg+xml") ext = "svg"
+
   const fileName = `logo_empresa_${empresaId}_${Date.now()}.${ext}`
   const destDir  = path.join(PUBLIC_DIR, "uploads", "empresas")
   await fs.mkdir(destDir, { recursive: true })
@@ -65,11 +68,17 @@ export async function subirLogoEmpresa(empresaId, req) {
     select: { configuracion: { where: { clave: "logo" }, select: { valor: true } } },
   })
   const logoAnterior = empresa?.configuracion?.[0]?.valor
-  if (logoAnterior) await fs.unlink(path.resolve(`public${logoAnterior}`)).catch(() => {})
+  if (logoAnterior) {
+    const rutaAnterior = path.join(PUBLIC_DIR, logoAnterior)
+    await fs.unlink(rutaAnterior).catch(() => {})
+  }
 
   const chunks = []
   for await (const chunk of data.file) chunks.push(chunk)
-  await fs.writeFile(path.join(destDir, fileName), Buffer.concat(chunks))
+  const buffer = Buffer.concat(chunks)
+  if (buffer.length === 0) throw new Error("El archivo esta vacio")
+
+  await fs.writeFile(path.join(destDir, fileName), buffer)
 
   const url = `/uploads/empresas/${fileName}`
   await db.configuracion.upsert({

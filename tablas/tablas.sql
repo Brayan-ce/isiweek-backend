@@ -1,3 +1,4 @@
+drop database isiweek;
 CREATE DATABASE IF NOT EXISTS isiweek CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE isiweek;
 
@@ -122,7 +123,7 @@ INSERT INTO modulos (nombre, slug, modo_sistema_id) VALUES
 ('Pagos', 'creditos-pagos', 3),
 ('Mora y Alertas', 'creditos-mora', 3),
 ('Pedidos', 'ventas-online-pedidos', 4),
-('Catálogo', 'ventas-online-catalogo', 4),
+('Catálogo', 'ventas-online-catalogo', 4);
 
 CREATE TABLE empresa_modulos (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
